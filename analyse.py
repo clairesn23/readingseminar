@@ -27,44 +27,28 @@ timestamps = np.array([(d - dates[0]).days for d in dates])
 dt_days = np.mean(np.diff(timestamps))
 fs_year = 365.25 / dt_days  # cycles par an
 
-def plot_psd(fs=fs_year):
-    frequencies, psd = signal.welch(values, fs=fs, nperseg=len(values)//2)
-    plt.figure(figsize=(10,5))
-    plt.semilogy(frequencies, psd)
-    plt.xlabel("Fréquence (cycles/an)")
-    plt.ylabel("Densité spectrale de puissance")
-    plt.title(f"PSD Welch - Rétrodiffusion radar")
-    plt.grid(True)
-    plt.show()
+dates = [datetime.strptime(t, "%Y-%m-%d") for t in times]
+days = np.array([(d - dates[0]).days for d in dates])
 
-interact(plot_psd, fs=FloatSlider(value=fs_year, min=0.01, max=50.0, step=0.1))
+# Calcul de la fréquence d'échantillonnage
+intervals = np.diff(days)
+fs = 1 / np.mean(intervals)  # échantillons par jour
+print(f"Fréquence d'échantillonnage fs = {fs:.4f} échantillons/jour")
 
-# FFT simplifiée
-N = len(values)
-fft_values = np.fft.fft(values)
-fft_freq = np.fft.fftfreq(N, d=1/fs_year)
-
-# Fréquences et amplitudes positives uniquement
-mask = fft_freq > 0
-freq_positive = fft_freq[mask]
-amplitude_positive = np.abs(fft_values[mask])
-
-plt.figure(figsize=(12,5))
-plt.plot(freq_positive, amplitude_positive)
-plt.xlabel("Fréquence (cycles/an)")
-plt.ylabel("Amplitude")
-plt.title("FFT - Rétrodiffusion radar")
-plt.xlim(0, 10)
-plt.grid(True)
-plt.show()
-
-# Série temporelle
-plt.figure(figsize=(12,5))
-plt.plot(dates, values)
+# La série temporelle
+plt.figure(figsize=(10,4))
+plt.plot(dates, values, marker='o')
 plt.xlabel("Date")
-plt.ylabel("Rétrodiffusion (dB)")
-plt.title("Série temporelle - Rétrodiffusion radar VH")
+plt.ylabel("Value")
+plt.title("Série temporelle")
 plt.grid(True)
-plt.xticks(rotation=45)
-plt.tight_layout()
+
+frequencies, psd = signal.welch(values, fs=fs, nperseg=len(values)//2)
+
+plt.figure(figsize=(10,4))
+plt.semilogy(frequencies, psd)
+plt.xlabel("Fréquence (cycles/jour)")
+plt.ylabel("Densité spectrale de puissance")
+plt.title("PSD Welch")
+plt.grid(True)
 plt.show()
