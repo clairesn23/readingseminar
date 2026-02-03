@@ -6,6 +6,7 @@ import numpy as np
 import scipy.signal as signal
 import matplotlib.pyplot as plt  
 from ipywidgets import interact, FloatSlider
+from datetime import datetime
 
 with open("data/Data/S1A_ASC-DSC_VV-VH_Paracou/s1a_vh_DSC_039_allROI.csv", "r") as fichier1:
     lecteur = csv.reader(fichier1)
@@ -19,20 +20,28 @@ data_a1 = np.array(data1, dtype=object)
 times = data_a1[:, 0]            # colonne temps
 values = data_a1[:, 1].astype(float)  # colonne valeurs
 
-def plot_psd(fs=3000):
-    frequencies, psd = signal.welch(values, fs=fs, nperseg=len(values)//2)
-    plt.figure(figsize=(10,5))
-    plt.semilogy(frequencies, psd)
-    plt.xlabel("Fréquence (cycles/unit)")
-    plt.ylabel("Densité spectrale de puissance")
-    plt.title(f"PSD Welch avec fs = {fs}")
-    plt.grid(True)
-    plt.show()
+dates = [datetime.strptime(t, "%Y-%m-%d") for t in times]
+days = np.array([(d - dates[0]).days for d in dates])
 
-interact(plot_psd, fs=FloatSlider(value=1.0, min=0.01, max=10.0, step=0.01))
+# Calcul de la fréquence d'échantillonnage
+intervals = np.diff(days)
+fs = 1 / np.mean(intervals)  # échantillons par jour
+print(f"Fréquence d'échantillonnage fs = {fs:.4f} échantillons/jour")
 
-plt.plot(times, values)
-plt.xlabel("Time")
+# La série temporelle
+plt.figure(figsize=(10,4))
+plt.plot(dates, values, marker='o')
+plt.xlabel("Date")
 plt.ylabel("Value")
 plt.title("Série temporelle")
+plt.grid(True)
 
+frequencies, psd = signal.welch(values, fs=fs, nperseg=len(values)//2)
+
+plt.figure(figsize=(10,4))
+plt.semilogy(frequencies, psd)
+plt.xlabel("Fréquence (cycles/jour)")
+plt.ylabel("Densité spectrale de puissance")
+plt.title("PSD Welch")
+plt.grid(True)
+plt.show()
