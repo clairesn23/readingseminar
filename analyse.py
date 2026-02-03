@@ -1,5 +1,6 @@
 data1 = []
 
+
 import csv
 import numpy as np
 import scipy.signal as signal
@@ -7,7 +8,7 @@ import matplotlib.pyplot as plt
 from ipywidgets import interact, FloatSlider
 from datetime import datetime
 
-with open("data/Data/S1A_ASC-DSC_VV-VH_Paracou/s1a_vh_DSC_039_allROI.csv", "r") as fichier1:
+with open("readingseminar/data/Data/S1A_ASC-DSC_VV-VH_Paracou/s1a_vh_DSC_039_allROI.csv", "r") as fichier1:
     lecteur = csv.reader(fichier1)
     next(lecteur)  # sauter l'entête
     for row in lecteur:
@@ -16,18 +17,10 @@ with open("data/Data/S1A_ASC-DSC_VV-VH_Paracou/s1a_vh_DSC_039_allROI.csv", "r") 
         data1.append([time_str, value])
 
 data_a1 = np.array(data1, dtype=object)
-times_str = data_a1[:, 0]
-values = data_a1[:, 1].astype(float)
+T = data_a1[:, 0]            # colonne temps
+values = data_a1[:, 1].astype(float)  # colonne valeurs
 
-# Convertir les dates
-dates = [datetime.strptime(t, '%Y-%m-%d') for t in times_str]
-timestamps = np.array([(d - dates[0]).days for d in dates])
-
-# Pas de temps moyen et fréquence d'échantillonnage
-dt_days = np.mean(np.diff(timestamps))
-fs_year = 365.25 / dt_days  # cycles par an
-
-dates = [datetime.strptime(t, "%Y-%m-%d") for t in times]
+dates = [datetime.strptime(t, "%Y-%m-%d") for t in T]
 days = np.array([(d - dates[0]).days for d in dates])
 
 # Calcul de la fréquence d'échantillonnage
