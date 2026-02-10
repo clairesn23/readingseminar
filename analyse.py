@@ -15,6 +15,12 @@ import matplotlib.pyplot as plt
 from ipywidgets import interact, FloatSlider
 from datetime import datetime
 
+import os
+
+# Dossier de sauvegarde des figures
+SAVE_DIR = "figures"
+os.makedirs(SAVE_DIR, exist_ok=True)
+
 # Lecture des données 
 
 # Fichier 1 : 39 DSC VH AllROI
@@ -200,15 +206,19 @@ print(f"Fréquence d'échantillonnage fs = {fs8:.4f} échantillons/jour")
 
 
 # La série temporelle
-dates=dates1
-values=values1
-fs=fs1
+dates=dates8
+values=values8
+fs=fs8
 plt.figure(figsize=(10,4))
 plt.plot(dates, values, marker='o')
 plt.xlabel("Date")
 plt.ylabel("Value")
 plt.title("Série temporelle")
 plt.grid(True)
+
+plt.tight_layout()
+plt.savefig(os.path.join(SAVE_DIR, "serie_temporelle8.png"), dpi=300)
+plt.close()  
 
 frequencies, psd = signal.welch(values, fs=fs, nperseg=len(values)//2)
 
@@ -218,4 +228,7 @@ plt.xlabel("Fréquence (cycles/jour)")
 plt.ylabel("Densité spectrale de puissance")
 plt.title("PSD Welch")
 plt.grid(True)
+plt.tight_layout()
+plt.savefig(os.path.join(SAVE_DIR, "psd_welch8.png"), dpi=300)
+plt.close()
 plt.show()
