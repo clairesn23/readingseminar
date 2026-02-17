@@ -50,7 +50,7 @@ files = [
 series = [read_csv_series(f) for f in files]
 
 # Paramètre global : nombre de nœuds
-n_knots_global = 40  # <-- tu peux changer ce nombre pour complexifier ou simplifier la spline
+n_knots_global = 30  # <-- tu peux changer ce nombre pour complexifier ou simplifier la spline
 
 # CONSTRUCTION BASE B-SPLINE
 def build_bspline_basis(t, degree=3, n_knots=n_knots_global):
