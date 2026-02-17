@@ -219,8 +219,19 @@ plt.grid(True)
 plt.tight_layout()
 plt.savefig(os.path.join(SAVE_DIR, "serie_temporelle8.png"), dpi=300)
 plt.close()  
+#window_lengths=[730, 900, 1000]
+##wl_samples = int(np.floor(wl / 12))  # window en nombre de samples
+            # nperseg = min(wl_samples, len(y))   # nb échantillons dans la fenêtre (taille de la fenêtre ou nombre d'échantillons restants si on est proche de la fin)
+            # noverlap = int(nperseg * ol)    # overlap en nombre de samples
 
-frequencies, psd = signal.welch(values, fs=fs, nperseg=len(values)//2)
+            # freqs, psd = welch(y, fs=fs, nperseg=nperseg, noverlap=noverlap)    # fonction welch de scipy.signal
+
+
+wl_samples = int(np.floor(730 / 12))  # window de 730 jours convertie en nombre de samples
+nperseg = min(wl_samples, len(values))   # nb échantillons dans la fenêtre (taille de la fenêtre ou nombre d'échantillons restants si on est proche de la fin)
+noverlap = int(nperseg * 0.5)    # overlap de 50 
+
+frequencies, psd = signal.welch(values, fs=fs, nperseg=nperseg)
 
 plt.figure(figsize=(10,4))
 plt.semilogy(frequencies, psd)
