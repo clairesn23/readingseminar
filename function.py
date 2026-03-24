@@ -372,12 +372,12 @@ def build_bspline_basis(t, n_knots, degree=3):
     return B
 
 def penalized_spline_fit(B, Y, lam):
-    beta = solve(B.T @ B + lam * np.eye(B.shape[1]), B.T @ Y)
+    beta = np.linal.solve(B.T @ B + lam * np.eye(B.shape[1]), B.T @ Y)
     Y_hat = B @ beta
     return beta, Y_hat  
 
 def smoothing_matrix(B, lam):
-    return B @ solve(B.T @ B + lam * np.eye(B.shape[1]), B.T)
+    return B @ np.linalg.solve(B.T @ B + lam * np.eye(B.shape[1]), B.T)
 
 def compute_edf(B, lam):
     return np.trace(smoothing_matrix(B, lam))
