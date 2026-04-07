@@ -354,11 +354,14 @@ def fit_fourier(y_signal, dates_str, n_freq, nom):
     }
 
 
+
 def build_bspline_basis(t, n_knots, degree=3):
-    knots_internal = np.linspace(t.min(), t.max(), n_knots)
-    knots = np.concatenate(([t.min()] * degree,
-                            knots_internal,
-                            [t.max()] * degree))
+    # Noeuds INTERNES seulement (sans les bornes)
+    knots_internal = np.linspace(t.min(), t.max(), n_knots + 2)[1:-1]  # ← exclure bornes
+    
+    knots = np.concatenate(([t.min()] * (degree + 1),
+                             knots_internal,
+                            [t.max()] * (degree + 1)))  # ← multiplicité degree+1
     
     K = len(knots) - degree - 1
     B = np.zeros((len(t), K))
@@ -371,13 +374,20 @@ def build_bspline_basis(t, n_knots, degree=3):
     
     return B
 
-def penalized_spline_fit(B, Y, lam):
-    beta = np.linalg.solve(B.T @ B + lam * np.eye(B.shape[1]), B.T @ Y)
-    Y_hat = B @ beta
-    return beta, Y_hat  
+def penalty_matrix(K, order=2):
+    D = np.diff(np.eye(K), n=order, axis=0)
+    return D.T @ D
 
+def penalized_spline_fit(B, Y, lam):
+    K = B.shape[1]
+    P = penalty_matrix(K)  # ← remplace np.eye
+    beta = np.linalg.solve(B.T @ B + lam * P, B.T @ Y)
+    return beta, B @ beta
+    
 def smoothing_matrix(B, lam):
-    return B @ np.linalg.solve(B.T @ B + lam * np.eye(B.shape[1]), B.T)
+    K = B.shape[1]
+    P = penalty_matrix(K)
+    return B @ np.linalg.solve(B.T @ B + lam * P, B.T)
 
 def compute_edf(B, lam):
     return np.trace(smoothing_matrix(B, lam))
