@@ -581,3 +581,46 @@ def stepwise_knot_selection_bspline(x, y, alpha=3.0, verbose=True):
         print(f"\n  ✓ Nœuds optimal : {best_n_knots}  |  Cp = {history['Cp'][best_idx]:.4f}")
 
     return best_n_knots, history
+
+
+def plot_spline_fit(t, values, Y_hat, dates, nom, n_knots, lam, outdir="figures_spline"):
+    """Visualise le signal, le fit spline pénalisé et les résidus."""
+    os.makedirs(outdir, exist_ok=True)
+    
+    residuals = values - Y_hat
+    
+    fig, axes = plt.subplots(2, 1, figsize=(14, 7), sharex=True,
+                          gridspec_kw={"height_ratios": [2, 1]})
+    
+    # ── Signal + spline ───────────────────────────────────────────────────
+    ax = axes[0]
+    ax.plot(dates, values, "-o", lw=1.2, alpha=0.5, markersize=3,
+            label="Données SAR", color="steelblue")
+    ax.plot(dates, Y_hat, "-", lw=2.2,
+            label=f"Spline pénalisée | n_knots={n_knots} | λ={lam:.2e}",
+            color="tomato")
+    ax.set_ylabel("σ⁰ [dB]", fontsize=11)
+    ax.legend(loc="best", fontsize=10)
+    ax.grid(True, alpha=0.4)
+    
+    ss_res = np.sum(residuals**2)
+    ss_tot = np.sum((values - values.mean())**2)
+    r2 = 1 - ss_res / ss_tot
+    ax.set_title(f"{nom}  |  R² = {r2:.4f}  |  Spline pénalisée", fontsize=12, fontweight="bold")
+    
+    # ── Résidus ───────────────────────────────────────────────────────────
+    ax = axes[1]
+    ax.plot(dates, residuals, "-", lw=0.8, alpha=0.7, color="gray")
+    ax.axhline(0, color="black", linestyle="--", lw=1)
+    ax.set_ylabel("Résidus [dB]", fontsize=11)
+    ax.set_xlabel("Date", fontsize=11)
+    ax.grid(True, alpha=0.4)
+    
+    plt.tight_layout()
+    fname = f"spline_fit_{nom}_k{n_knots}.png"
+    plt.savefig(os.path.join(outdir, fname), dpi=150, bbox_inches="tight")
+    plt.show()
+    print(f"    → {fname}")
+    
+    return residuals, r2
+
