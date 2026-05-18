@@ -186,7 +186,7 @@ def plot_signal_par_mois_single(df, dates_dict, nom, title=None):
     ax.set_xticks(xticks_pos)
     ax.set_xticklabels(xticks_labels, fontsize=11)
     ax.set_ylabel("Backscatter")
-    ax.set_title(title or f"Signal groupé par mois avec régression linéaire — {nom}")
+    ax.set_title(title or f"Signal groupé par mois avec régression linéaire | {nom}")
     ax.legend(loc="upper right", ncol=6, fontsize=8)
     ax.grid(True, alpha=0.3)
     plt.tight_layout()
@@ -251,7 +251,7 @@ def psd_welch_annee(df, nom, window_lengths=[730, 910, 1095, 1280, 1460],
                             fontsize=7, color=color)
 
             top_periods_years = [p/365 for p in top_periods]
-            print(f" WL = {wl} days — Dominant periods ≈ "
+            print(f" WL = {wl} days | Dominant periods ≈ "
                   f"{[round(period,3) for period in top_periods_years]} years "
                   f"or, {[int(p) for p in top_periods]} days")
 
@@ -271,87 +271,6 @@ def psd_welch_annee(df, nom, window_lengths=[730, 910, 1095, 1280, 1460],
             plt.show()
         else:
             plt.close()
-
-
-
-
-
-# Variable globale pour stocker les fréquences ω
-omegas = None
-
-def fourier_model(t, a, b, *coeffs):
-    """
-    Modèle de Fourier : y(t) = a + b*t + Σ[Aᵢ*sin(ωᵢ*t) + Bᵢ*cos(ωᵢ*t)]
-    
-    Les fréquences ω sont fixées d'avance (variable globale).
-    """
-    global omegas
-    y = a + b * t
-    n_freq = len(coeffs) // 2
-    for i in range(n_freq):
-        omega = omegas[i]
-        A = coeffs[2*i]
-        B = coeffs[2*i + 1]
-        y += A * np.sin(omega * t) + B * np.cos(omega * t)
-    return y
-
-def fit_fourier(y_signal, dates_str, n_freq, nom):
-    """
-    Ajuste un modèle de Fourier à n_freq harmoniques.
-    
-    Retourne :
-    ---------
-    dict avec : params, t, y, y_fit, residuals, r_squared, omegas, periods
-    """
-    global omegas
-    
-    # Conversion dates → jours depuis origine
-    dates_dt = [datetime.strptime(d, "%Y-%m-%d") for d in dates_str]
-    t0 = dates_dt[0]
-    t = np.array([(d - t0).days for d in dates_dt], dtype=float)
-    y = y_signal
-    
-    # Extraction des fréquences dominantes via Welch
-    fs = 1 / 12
-    nperseg = min(int(730 / 12), len(y))
-    freqs, psd = signal.welch(y, fs=fs, window="hann",
-                              nperseg=nperseg, noverlap=nperseg // 2,
-                              scaling="density")
-    top_freqs_idx = np.argsort(psd[1:])[::-1][:n_freq] + 1
-    top_freqs = freqs[top_freqs_idx]
-    omegas = 2 * np.pi * top_freqs
-    
-    # Estimation initiale
-    p0 = [y.mean(), 0.0] + [0.1, 0.1] * n_freq
-    
-    # Ajustement par moindres carrés
-    try:
-        params, pcov = curve_fit(fourier_model, t, y, p0=p0, maxfev=10000)
-    except RuntimeError:
-        print(f"    ⚠ Convergence échouée pour {nom} avec n_freq={n_freq}")
-        return None
-    
-    # Reconstruction et résidus
-    y_fit = fourier_model(t, *params)
-    residuals = y - y_fit
-    
-    # R²
-    ss_res = np.sum(residuals**2)
-    ss_tot = np.sum((y - y.mean())**2)
-    r_squared = 1 - (ss_res / ss_tot)
-    
-    return {
-        "params": params,
-        "pcov": pcov,
-        "t": t,
-        "y": y,
-        "y_fit": y_fit,
-        "residuals": residuals,
-        "r_squared": r_squared,
-        "omegas": omegas.copy(),
-        "periods": 2 * np.pi / omegas,
-        "dates": dates_dt
-    }
 
 
 
